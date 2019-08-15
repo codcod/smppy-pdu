@@ -8,7 +8,8 @@ from operator import itemgetter as _itemgetter
 from keyword import iskeyword as _iskeyword
 import sys as _sys
 
-#pylint: disable-msg=E0102
+
+# pylint: disable-msg=E0102
 def namedtuple(typename, field_names, verbose=False, rename=False):
     """Returns a new subclass of tuple with named fields.
 
@@ -35,26 +36,29 @@ def namedtuple(typename, field_names, verbose=False, rename=False):
 
     # Parse and validate the field names.  Validation serves two purposes,
     # generating informative error messages and preventing template injection attacks.
-    if isinstance(field_names, basestring):
-        field_names = field_names.replace(',', ' ').split() # names separated by whitespace and/or commas
+    if isinstance(field_names, str):
+        # names separated by whitespace and/or commas
+        field_names = field_names.replace(',', ' ').split()
     field_names = tuple(map(str, field_names))
     if rename:
         names = list(field_names)
         seen = set()
         for i, name in enumerate(names):
-            if (not min(c.isalnum() or c=='_' for c in name) or _iskeyword(name)
-                or not name or name[0].isdigit() or name.startswith('_')
-                or name in seen):
-                    names[i] = '_%d' % i
+            if (not min(c.isalnum() or c == '_' for c in name) or _iskeyword(name)
+                    or not name or name[0].isdigit() or name.startswith('_')
+                    or name in seen):
+                names[i] = '_%d' % i
             seen.add(name)
         field_names = tuple(names)
     for name in (typename,) + field_names:
-        if not min(c.isalnum() or c=='_' for c in name):
-            raise ValueError('Type names and field names can only contain alphanumeric characters and underscores: %r' % name)
+        if not min(c.isalnum() or c == '_' for c in name):
+            raise ValueError(
+                'Type names and field names can only contain alphanumeric characters and underscores: %r' % name)
         if _iskeyword(name):
             raise ValueError('Type names and field names cannot be a keyword: %r' % name)
         if name[0].isdigit():
-            raise ValueError('Type names and field names cannot start with a number: %r' % name)
+            raise ValueError(
+                'Type names and field names cannot start with a number: %r' % name)
     seen_names = set()
     for name in field_names:
         if name.startswith('_') and not rename:
@@ -65,7 +69,8 @@ def namedtuple(typename, field_names, verbose=False, rename=False):
 
     # Create and fill-in the class template
     numfields = len(field_names)
-    argtxt = repr(field_names).replace("'", "")[1:-1]   # tuple repr without parens or quotes
+    argtxt = repr(field_names).replace("'", "")[
+             1:-1]  # tuple repr without parens or quotes
     reprtxt = ', '.join('%s=%%r' % name for name in field_names)
     template = '''class %(typename)s(tuple):
         '%(typename)s(%(argtxt)s)' \n
@@ -96,15 +101,15 @@ def namedtuple(typename, field_names, verbose=False, rename=False):
     for i, name in enumerate(field_names):
         template += '        %s = _property(_itemgetter(%d))\n' % (name, i)
     if verbose:
-        print template
+        print(template)
 
     # Execute the template string in a temporary namespace
     namespace = dict(_itemgetter=_itemgetter, __name__='namedtuple_%s' % typename,
                      _property=property, _tuple=tuple)
     try:
-        exec template in namespace
-    except SyntaxError, e:
-        raise SyntaxError(e.message + ':\n' + template)
+        exec(template, namespace)
+    except SyntaxError as e:
+        raise SyntaxError(str(e) + ':\n' + template)
     result = namespace[typename]
 
     # For pickling to work, the __module__ variable needs to be set to the frame
@@ -119,37 +124,40 @@ def namedtuple(typename, field_names, verbose=False, rename=False):
     return result
 
 
-
-
-
-
 if __name__ == '__main__':
     # verify that instances can be pickled
-    from cPickle import loads, dumps
+    from pickle import loads, dumps
+
     Point = namedtuple('Point', 'x, y', True)
     p = Point(x=10, y=20)
     assert p == loads(dumps(p, -1))
+
 
     # test and demonstrate ability to override methods
     class Point(namedtuple('Point', 'x y')):
         @property
         def hypot(self):
             return (self.x ** 2 + self.y ** 2) ** 0.5
+
         def __str__(self):
             return 'Point: x=%6.3f y=%6.3f hypot=%6.3f' % (self.x, self.y, self.hypot)
 
-    for p in Point(3,4), Point(14,5), Point(9./7,6):
-        print p
+
+    for p in Point(3, 4), Point(14, 5), Point(9. / 7, 6):
+        print(p)
+
 
     class Point(namedtuple('Point', 'x y')):
         'Point class with optimized _make() and _replace() without error-checking'
         _make = classmethod(tuple.__new__)
+
         def _replace(self, _map=map, **kwds):
             return self._make(_map(kwds.get, ('x', 'y'), self))
 
-    print Point(11, 22)._replace(x=100)
+
+    print(Point(11, 22)._replace(x=100))
 
     import doctest
-    TestResults = namedtuple('TestResults', 'failed attempted')
-    print TestResults(*doctest.testmod())
 
+    TestResults = namedtuple('TestResults', 'failed attempted')
+    print(TestResults(*doctest.testmod()))

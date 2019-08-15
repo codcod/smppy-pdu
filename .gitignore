@@ -8,3 +8,5 @@ _trial_temp
 build/
 dist/
 devpython/
+.idea/
+Pipfile.lock
