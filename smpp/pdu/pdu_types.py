@@ -168,7 +168,7 @@ class PDU(object):
         for oParam in list(self.params.keys()):
             if oParam not in self.mandatory_params:
                 r += "\n%s: %s" % (oParam, self.params[oParam])
-        r += '\n]'
+        r += ']'
         return r
 
     def __eq__(self, pdu):
