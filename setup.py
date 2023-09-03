@@ -11,7 +11,7 @@ with open(path.join(here, 'VERSION')) as f:
     version = f.read().strip()
 
 setup(
-    name='smpppdu',
+    name='smppy-pdu',
     version=version,
     author='Roger Hoover',
     author_email='roger.hoover@gmail.com',
@@ -24,7 +24,7 @@ setup(
     url='https://github.com/devtud/smpppdu',
     python_requires='>=3.7, <4',
     include_package_data=True,
-    package_data={'smpppdu': ['README.markdown']},
+    package_data={'smppy-pdu': ['README.markdown']},
     zip_safe=False,
     test_suite='smpppdu.tests',
     project_urls={
